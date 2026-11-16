@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>ПК МИШКА — Генератор документов</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <style>
+    :root {
+      --bg-dark: #071324;
+      --bg-card: rgba(16, 37, 66, 0.72);
+      --border-glass: rgba(94, 179, 246, 0.22);
+      --accent: #1d9bf0;
+      --accent-glow: rgba(29, 155, 240, 0.45);
+      --accent-gradient: linear-gradient(135deg, #0088ff 0%, #00c6ff 100%);
+      --text-main: #f0f6fc;
+      --text-muted: #8b9bb4;
+      --danger: #ff5b5b;
+      --success: #00e676;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      min-height: 100vh;
+      overflow-x: hidden;
+      padding: 18px 16px 100px;
+      position: relative;
+    }
+
+    .bg-orb {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(75px);
+      z-index: -1;
+      opacity: 0.45;
+      animation: floatOrb 10s infinite ease-in-out alternate;
+    }
+    .orb-1 {
+      width: 240px;
+      height: 240px;
+      background: #0077ff;
+      top: -60px;
+      right: -50px;
+    }
+    .orb-2 {
+      width: 280px;
+      height: 280px;
+      background: #00d2ff;
+      bottom: 5%;
+      left: -80px;
+      animation-delay: -5s;
+    }
+
+    @keyframes floatOrb {
+      0% { transform: translateY(0px) scale(1); }
+      100% { transform: translateY(30px) scale(1.1); }
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 20px;
+      animation: fadeDown 0.5s ease-out;
+    }
+    .brand-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 14px;
+      border-radius: 999px;
+      background: rgba(29, 155, 240, 0.15);
+      border: 1px solid var(--border-glass);
+      color: #6cc6ff;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+    .header h1 {
+      font-size: 22px;
+      font-weight: 800;
+      background: linear-gradient(90deg, #ffffff, #89d4ff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .header p {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    .tabs {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      background: rgba(10, 25, 47, 0.85);
+      padding: 5px;
+      border-radius: 14px;
+      border: 1px solid var(--border-glass);
+      margin-bottom: 18px;
+      backdrop-filter: blur(12px);
+      animation: fadeUp 0.55s ease-out;
+    }
+    .tab-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      padding: 10px 6px;
+      font-size: 12.5px;
+      font-weight: 600;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .tab-btn.active {
+      background: var(--accent-gradient);
+      color: #fff;
+      box-shadow: 0 4px 15px var(--accent-glow);
+    }
+
+    .quick-actions {
+      display: flex;
+      justify-content: flex-end;
+      margin-bottom: 12px;
+    }
+    .demo-btn {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid var(--border-glass);
+      color: #9cdbff;
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 11.5px;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+    .demo-btn:active {
+      transform: scale(0.96);
+    }
+
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-glass);
+      border-radius: 18px;
+      padding: 18px 16px;
+      margin-bottom: 16px;
+      backdrop-filter: blur(16px);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.28);
+      animation: fadeUp 0.45s ease-out;
+      transition: all 0.3s ease;
+    }
+    .card.hidden {
+      display: none;
+    }
+    .card-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 15px;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 14px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .field-group {
+      margin-bottom: 13px;
+    }
+    .field-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+      margin-bottom: 5px;
+      transition: color 0.2s;
+    }
+    input, textarea {
+      width: 100%;
+      background: rgba(6, 17, 33, 0.75);
+      border: 1px solid rgba(139, 155, 180, 0.25);
+      border-radius: 11px;
+      padding: 11px 13px;
+      color: var(--text-main);
+      font-size: 14px;
+      outline: none;
+      transition: all 0.25s ease;
+    }
+    textarea {
+      resize: vertical;
+      min-height: 62px;
+    }
+    input:focus, textarea:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(29, 155, 240, 0.22);
+      background: rgba(10, 25, 48, 0.95);
+    }
+    input.invalid, textarea.invalid {
+      border-color: var(--danger);
+      box-shadow: 0 0 0 3px rgba(255, 91, 91, 0.2);
+    }
+    .hint {
+      font-size: 11px;
+      color: #6c7e97;
+      margin-top: 3px;
+    }
+
+    .bottom-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+      background: linear-gradient(180deg, rgba(7,19,36,0) 0%, rgba(7,19,36,0.95) 35%);
+      backdrop-filter: blur(8px);
+      z-index: 10;
+    }
+    .submit-btn {
+      width: 100%;
+      border: none;
+      border-radius: 14px;
+      padding: 15px;
+      font-size: 15px;
+      font-weight: 700;
+      color: #fff;
+      background: var(--accent-gradient);
+      box-shadow: 0 8px 24px var(--accent-glow);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .submit-btn:active {
+      transform: scale(0.98);
+    }
+
+    .loader-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(7, 19, 36, 0.88);
+      backdrop-filter: blur(10px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+    .loader-overlay.active {
+      opacity: 1;
+      pointer-events: all;
+    }
+    .spinner {
+      width: 54px;
+      height: 54px;
+      border: 4px solid rgba(29, 155, 240, 0.2);
+      border-top-color: #00c6ff;
+      border-radius: 50%;
+      animation: spin 0.85s linear infinite;
+      margin-bottom: 16px;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(14px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes fadeDown {
+      from { opacity: 0; transform: translateY(-12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+  <div class="bg-orb orb-1"></div>
+  <div class="bg-orb orb-2"></div>
+
+  <div class="header">
+    <div class="brand-badge">🐻 ООО «ПК МИШКА»</div>
+    <h1>Магия Документов</h1>
+    <p>Автозаполнение дилерских договоров и сертификатов</p>
+  </div>
+
+  <div class="tabs">
+    <button type="button" class="tab-btn active" data-mode="both">Оба документа</button>
+    <button type="button" class="tab-btn" data-mode="contract">Только Договор</button>
+    <button type="button" class="tab-btn" data-mode="certificate">Сертификат</button>
+  </div>
+
+  <div class="quick-actions">
+    <button type="button" class="demo-btn" id="fillDemoBtn">⚡ Заполнить пример</button>
+  </div>
+
+  <form id="docForm" novalidate>
+    <div class="card" id="contractSection">
+      <div class="card-title">📄 Данные для Дилерского договора</div>
+
+      <div class="field-row">
+        <div class="field-group">
+          <label>Номер договора *</label>
+          <input type="text" id="contract_number" placeholder="777" required />
+        </div>
+        <div class="field-group">
+          <label>Дата договора *</label>
+          <input type="text" id="contract_date" placeholder="«10» ноября 2026" required />
+        </div>
+      </div>
+
+      <div class="field-group">
+        <label>Название компании Дилера *</label>
+        <input type="text" id="dealer_name" placeholder="ООО «МАЧНЕВ И КОШКИ»" required />
+      </div>
+
+      <div class="field-group">
+        <label>Должность и ФИО в род. падеже (в лице кого) *</label>
+        <input type="text" id="dealer_signatory_gen" placeholder="Генерального директора Мачнева А.И." required />
+        <div class="hint">Подставляется в преамбулу: «...в лице [ваше значение], действующего...»</div>
+      </div>
+
+      <div class="field-row">
+        <div class="field-group">
+          <label>ФИО для подписи *</label>
+          <input type="text" id="dealer_short_sign" placeholder="Мачнев А.И." required />
+        </div>
+        <div class="field-group">
+          <label>ИНН / КПП Дилера *</label>
+          <input type="text" id="dealer_inn_kpp" placeholder="4953077739 / 4953088974" required />
+        </div>
+      </div>
+
+      <div class="field-group">
+        <label>Юридический адрес *</label>
+        <textarea id="dealer_address" placeholder="111531, г. Москва, ш. Энтузиастов, д. 100" required></textarea>
+      </div>
+
+      <div class="field-row">
+        <div class="field-group">
+          <label>Расчетный счет (Р/с) *</label>
+          <input type="text" id="dealer_rs" placeholder="40702810..." maxlength="25" required />
+        </div>
+        <div class="field-group">
+          <label>БИК банка *</label>
+          <input type="text" id="dealer_bik" placeholder="044525225" maxlength="12" required />
+        </div>
+      </div>
+
+      <div class="field-group">
+        <label>Наименование банка *</label>
+        <input type="text" id="dealer_bank" placeholder="ПАО Альфа-Банк" required />
+      </div>
+
+      <div class="field-group">
+        <label>Корреспондентский счет (К/с) *</label>
+        <input type="text" id="dealer_ks" placeholder="30101810..." maxlength="25" required />
+      </div>
+
+      <div class="field-row">
+        <div class="field-group">
+          <label>Телефон *</label>
+          <input type="tel" id="dealer_phone" placeholder="+7 (906) 040-00-43" required />
+        </div>
+        <div class="field-group">
+          <label>Email *</label>
+          <input type="email" id="dealer_email" placeholder="info@company.ru" required />
+        </div>
+      </div>
+    </div>
+
+    <div class="card" id="certificateSection">
+      <div class="card-title">🏆 Данные для Сертификата Дилера</div>
+
+      <div class="field-row">
+        <div class="field-group">
+          <label>Номер сертификата *</label>
+          <input type="text" id="cert_number" placeholder="№ 2708/25" required />
+        </div>
+        <div class="field-group">
+          <label>Действителен до *</label>
+          <input type="text" id="cert_valid_until" placeholder="31.12.2027" required />
+        </div>
+      </div>
+
+      <div class="field-group">
+        <label>Название компании на сертификате *</label>
+        <input type="text" id="cert_company" placeholder="ООО фирма «Мосводопром»" required />
+      </div>
+
+      <div class="field-group">
+        <label>ИНН Дилера *</label>
+        <input type="text" id="cert_inn" placeholder="ИНН 7721023832" required />
+      </div>
+    </div>
+
+    <div class="bottom-bar">
+      <button type="submit" class="submit-btn">
+        <span>🚀 Сгенерировать и получить в чат</span>
+      </button>
+    </div>
+  </form>
+
+  <div class="loader-overlay" id="loader">
+    <div class="spinner"></div>
+    <h3 id="loaderText">Собираем документы...</h3>
+    <p style="font-size: 13px; color: var(--text-muted); margin-top: 6px;">Бот уже отправляет файлы вам в Telegram</p>
+  </div>
+
+  <script>
+    const tg = window.Telegram.WebApp;
+    tg.expand();
+    tg.ready();
+
+    let currentMode = "both";
+    const tabButtons = document.querySelectorAll(".tab-btn");
+    const contractSection = document.getElementById("contractSection");
+    const certificateSection = document.getElementById("certificateSection");
+
+    tabButtons.forEach((btn) => {
+      btn.addEventListener("click", () => {
+        if (tg.HapticFeedback) tg.HapticFeedback.selectionChanged();
+        tabButtons.forEach((b) => b.classList.remove("active"));
+        btn.classList.add("active");
+        currentMode = btn.dataset.mode;
+
+        contractSection.classList.toggle("hidden", currentMode === "certificate");
+        certificateSection.classList.toggle("hidden", currentMode === "contract");
+      });
+    });
+
+    document.getElementById("dealer_name").addEventListener("input", (e) => {
+      const certComp = document.getElementById("cert_company");
+      if (!certComp.dataset.touched) certComp.value = e.target.value;
+    });
+    document.getElementById("cert_company").addEventListener("input", (e) => {
+      e.target.dataset.touched = "true";
+    });
+    document.getElementById("dealer_inn_kpp").addEventListener("input", (e) => {
+      const certInn = document.getElementById("cert_inn");
+      if (!certInn.dataset.touched) {
+        const innOnly = e.target.value.split("/")[0].trim();
+        certInn.value = innOnly ? `ИНН ${innOnly}` : "";
+      }
+    });
+
+    document.getElementById("fillDemoBtn").addEventListener("click", () => {
+      if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred("light");
+      document.getElementById("contract_number").value = "777";
+      document.getElementById("contract_date").value = "«10» ноября 2026";
+      document.getElementById("dealer_name").value = "ООО «МАЧНЕВ И КОШКИ»";
+      document.getElementById("dealer_signatory_gen").value = "Генерального директора Мачнева А.И.";
+      document.getElementById("dealer_short_sign").value = "Мачнев А.И.";
+      document.getElementById("dealer_inn_kpp").value = "4953077739 / 4953088974";
+      document.getElementById("dealer_address").value = "111531, г. Москва, ул. шоссе Энтузиастов, д. 100";
+      document.getElementById("dealer_rs").value = "40040040040040040044";
+      document.getElementById("dealer_bik").value = "01020304";
+      document.getElementById("dealer_bank").value = "ПАО Альфа-банк";
+      document.getElementById("dealer_ks").value = "50050050050050050055";
+      document.getElementById("dealer_phone").value = "+7 (906) 040-00-43";
+      document.getElementById("dealer_email").value = "alexeimachnev@icloud.com";
+      document.getElementById("cert_number").value = "№ 2708/25";
+      document.getElementById("cert_valid_until").value = "31.12.2027";
+      document.getElementById("cert_company").value = "ООО «МАЧНЕВ И КОШКИ»";
+      document.getElementById("cert_inn").value = "ИНН 4953077739";
+    });
+
+    document.getElementById("docForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const activeInputs = [];
+      if (currentMode !== "certificate") {
+        activeInputs.push(...contractSection.querySelectorAll("input[required], textarea[required]"));
+      }
+      if (currentMode !== "contract") {
+        activeInputs.push(...certificateSection.querySelectorAll("input[required], textarea[required]"));
+      }
+
+      let hasError = false;
+      activeInputs.forEach((el) => {
+        if (!el.value.trim()) {
+          el.classList.add("invalid");
+          hasError = true;
+        } else {
+          el.classList.remove("invalid");
+        }
+      });
+
+      if (hasError) {
+        if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred("error");
+        tg.showAlert("Пожалуйста, заполните все выделенные обязательные поля.");
+        return;
+      }
+
+      const userId = tg.initDataUnsafe?.user?.id;
+      const payload = {
+        user_id: userId || 0,
+        doc_type: currentMode,
+        contract_number: document.getElementById("contract_number").value.trim(),
+        contract_date: document.getElementById("contract_date").value.trim(),
+        dealer_name: document.getElementById("dealer_name").value.trim(),
+        dealer_signatory_gen: document.getElementById("dealer_signatory_gen").value.trim(),
+        dealer_short_sign: document.getElementById("dealer_short_sign").value.trim(),
+        dealer_address: document.getElementById("dealer_address").value.trim(),
+        dealer_inn_kpp: document.getElementById("dealer_inn_kpp").value.trim(),
+        dealer_rs: document.getElementById("dealer_rs").value.trim(),
+        dealer_bank: document.getElementById("dealer_bank").value.trim(),
+        dealer_ks: document.getElementById("dealer_ks").value.trim(),
+        dealer_bik: document.getElementById("dealer_bik").value.trim(),
+        dealer_phone: document.getElementById("dealer_phone").value.trim(),
+        dealer_email: document.getElementById("dealer_email").value.trim(),
+        cert_number: document.getElementById("cert_number").value.trim(),
+        cert_company: document.getElementById("cert_company").value.trim(),
+        cert_inn: document.getElementById("cert_inn").value.trim(),
+        cert_valid_until: document.getElementById("cert_valid_until").value.trim(),
+      };
+
+      const loader = document.getElementById("loader");
+      loader.classList.add("active");
+
+      try {
+        if (userId) {
+          const res = await fetch("/api/generate", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          });
+          const result = await res.json();
+          if (!result.ok) throw new Error(result.error || "Ошибка сервера");
+          if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred("success");
+          setTimeout(() => tg.close(), 700);
+        } else {
+          tg.sendData(JSON.stringify(payload));
+          tg.close();
+        }
+      } catch (err) {
+        loader.classList.remove("active");
+        if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred("error");
+        tg.showAlert("Ошибка при отправке: " + err.message);
+      }
+    });
+  </script>
+</body>
+</html>
