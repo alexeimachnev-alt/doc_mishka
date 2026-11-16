@@ -152,12 +152,13 @@ async def handle_web_app_data(message: Message):
     await send_generated_docs(message.chat.id, data)
 
 
-@app.get("/health")
+@app.api_route("/health", methods=["GET", "HEAD"])
 async def health_check():
     return {"status": "ok", "service": "mishka-doc-bot"}
 
 
-@app.get("/webapp")
+@app.api_route("/", methods=["GET", "HEAD"])
+@app.api_route("/webapp", methods=["GET", "HEAD"])
 async def serve_webapp():
     return FileResponse(os.path.join(BASE_DIR, "static", "index.html"))
 
