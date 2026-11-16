@@ -1,14 +1,42 @@
 import io
 import os
+import glob
 from docx import Document
 from pptx import Presentation
 from PIL import Image, ImageDraw, ImageFont
 
-TEMPLATE_DIR = "templates"
-DOCX_TEMPLATE_PATH = os.path.join(TEMPLATE_DIR, "Дилерский_договор_Мишка-2_2.docx")
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+TEMPLATE_DIR = os.path.join(BASE_DIR, "templates")
+
+DOCX_TEMPLATE_PATH = os.path.join(TEMPLATE_DIR, "dealer_contract_template.docx")
 PPTX_TEMPLATE_PATH = os.path.join(TEMPLATE_DIR, "MISHKA_certificate_A4.pptx")
 CERT_BG_PATH = os.path.join(TEMPLATE_DIR, "cert_bg.png")
 FONT_PATH = os.path.join(TEMPLATE_DIR, "font.ttf")
+
+
+def _resolve_docx_path() -> str:
+    """Находит шаблон .docx даже при проблемах с кириллицей (NFD/NFC на macOS и Linux) или рабочей папкой."""
+    if os.path.exists(DOCX_TEMPLATE_PATH):
+        return DOCX_TEMPLATE_PATH
+    # Ищем любой .docx в папке templates/ или в корне проекта
+    for search_dir in (TEMPLATE_DIR, BASE_DIR):
+        if os.path.exists(search_dir):
+            docx_files = glob.glob(os.path.join(search_dir, "*.docx"))
+            if docx_files:
+                return docx_files[0]
+    raise FileNotFoundError(f"Шаблон .docx не найден в {TEMPLATE_DIR}")
+
+
+def _resolve_pptx_path() -> str | None:
+    """Находит шаблон .pptx в папке templates/ или корне проекта."""
+    if os.path.exists(PPTX_TEMPLATE_PATH):
+        return PPTX_TEMPLATE_PATH
+    for search_dir in (TEMPLATE_DIR, BASE_DIR):
+        if os.path.exists(search_dir):
+            pptx_files = glob.glob(os.path.join(search_dir, "*.pptx"))
+            if pptx_files:
+                return pptx_files[0]
+    return None
 
 
 def _replace_text_in_paragraph(paragraph, replacements: dict):
@@ -43,7 +71,8 @@ def build_dealer_contract(data: dict) -> io.BytesIO:
     Заполняет шаблон Дилерского договора (.docx) и возвращает поток байтов.
     Поддерживает как плейсхолдеры {{...}}, так и замену по исходному тексту шаблона.
     """
-    doc = Document(DOCX_TEMPLATE_PATH)
+    docx_path = _resolve_docx_path()
+    doc = Document(docx_path)
 
     contract_num = data.get("contract_number", "777")
     contract_date = data.get("contract_date", "«10» ноября 2026")
@@ -113,10 +142,11 @@ def build_certificate_pptx(data: dict) -> io.BytesIO | None:
     """
     Заполняет шаблон Сертификата Дилера (.pptx) с сохранением фирменного дизайна.
     """
-    if not os.path.exists(PPTX_TEMPLATE_PATH):
+    pptx_path = _resolve_pptx_path()
+    if not pptx_path:
         return None
 
-    prs = Presentation(PPTX_TEMPLATE_PATH)
+    prs = Presentation(pptx_path)
 
     cert_num = data.get("cert_number", "№ 2708/25")
     if not str(cert_num).startswith("№"):
